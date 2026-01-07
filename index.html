@@ -167,7 +167,7 @@ function calcular() {
         taxa = taxasInfiniti[bandeira][parcelas];
     }
 
-    const total = valor * (1 + taxa);
+    const total = valor / (1 - taxa);
     const valorParcela = total / parcelas;
 
     document.getElementById("total").innerText =
