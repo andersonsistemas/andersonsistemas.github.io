@@ -37,22 +37,25 @@
                 Calculadora de Taxas – InfinitiPay
             </h4>
 
-            <!-- Empresa -->
+            <!-- Modalidade -->
             <div class="mb-3">
-                <label class="form-label">Empresa</label>
-                <select id="empresa" class="form-select" onchange="mudarEmpresa()">
-                    <option value="infiniti">InfinitiPay</option>
-                    <option value="nubank">Nubank</option>
+                <label class="form-label">Modalidade</label>
+                <select id="modalidade" class="form-select" onchange="mudarModalidade()">
+                    <option value="inf_link">InfinitiPay – Link de pagamento</option>
+                    <option value="inf_maquina">InfinitiPay – Cartão físico</option>
+                    <option value="nubank">Nubank – Link de pagamento</option>
                 </select>
             </div>
 
-            <!-- Bandeira (só InfinitiPay) -->
-            <div class="mb-3" id="bandeiras">
-                <label class="form-label">Bandeira</label>
+            <!-- Bandeira (SÓ cartão físico) -->
+            <div class="mb-3" id="bandeiras" style="display:none;">
+                <label class="form-label">Bandeira do cartão</label>
+
                 <div class="form-check">
                     <input class="form-check-input" type="radio" name="bandeira" value="visa" checked>
                     <label class="form-check-label">Visa / Mastercard</label>
                 </div>
+
                 <div class="form-check">
                     <input class="form-check-input" type="radio" name="bandeira" value="amex">
                     <label class="form-check-label">AMEX / ELO</label>
@@ -61,7 +64,7 @@
 
             <!-- Valor -->
             <div class="mb-3">
-                <label class="form-label">Valor da venda (R$)</label>
+                <label class="form-label">Valor líquido desejado (R$)</label>
                 <input type="number" id="valor" class="form-control" placeholder="Ex: 1000">
             </div>
 
@@ -90,7 +93,7 @@
 
             <!-- Resultado -->
             <div class="resultado mt-4">
-                <p>Total com juros: <span id="total">R$ 0,00</span></p>
+                <p>Valor cobrado do cliente: <span id="total">R$ 0,00</span></p>
                 <p>Valor da parcela: <span id="parcela">R$ 0,00</span></p>
             </div>
 
@@ -101,15 +104,22 @@
 <script>
 /* ================= TAXAS ================= */
 
-// Nubank (já em decimal)
+// Nubank
 const taxasNubank = {
     1: 0.04384, 2: 0.06485, 3: 0.07538, 4: 0.08589,
     5: 0.09649, 6: 0.10705, 7: 0.14403, 8: 0.15500,
     9: 0.16618, 10: 0.17730, 11: 0.18864, 12: 0.19804
 };
 
-// InfinitiPay
-const taxasInfiniti = {
+// InfinitiPay - Link
+const taxasInfLink = {
+    1: 0.0420, 2: 0.0609, 3: 0.0701, 4: 0.0791,
+    5: 0.0880, 6: 0.0967, 7: 0.1259, 8: 0.1342,
+    9: 0.1425, 10: 0.1506, 11: 0.1587, 12: 0.1666
+};
+
+// InfinitiPay - Maquininha (por bandeira)
+const taxasInfMaquina = {
     visa: {
         1: 0.0315, 2: 0.0539, 3: 0.0612, 4: 0.0685,
         5: 0.0757, 6: 0.0828, 7: 0.0899, 8: 0.0969,
@@ -122,27 +132,31 @@ const taxasInfiniti = {
     }
 };
 
-/* ============== UI / TEMA ============== */
+/* ============== UI ============== */
 
-function mudarEmpresa() {
-    const empresa = document.getElementById("empresa").value;
+function mudarModalidade() {
+    const modalidade = document.getElementById("modalidade").value;
     const bandeiras = document.getElementById("bandeiras");
     const card = document.getElementById("card");
     const botao = document.getElementById("botao");
     const titulo = document.getElementById("titulo");
 
-    if (empresa === "infiniti") {
+    if (modalidade === "inf_maquina") {
         bandeiras.style.display = "block";
-        card.style.borderTop = "6px solid #BAFF1A";
-        botao.style.backgroundColor = "#BAFF1A";
-        botao.style.color = "#000";
-        titulo.innerText = "Calculadora de Taxas – InfinitiPay";
     } else {
         bandeiras.style.display = "none";
+    }
+
+    if (modalidade === "nubank") {
         card.style.borderTop = "6px solid #8A2BE2";
         botao.style.backgroundColor = "#8A2BE2";
         botao.style.color = "#fff";
         titulo.innerText = "Calculadora de Taxas – Nubank";
+    } else {
+        card.style.borderTop = "6px solid #BAFF1A";
+        botao.style.backgroundColor = "#BAFF1A";
+        botao.style.color = "#000";
+        titulo.innerText = "Calculadora de Taxas – InfinitiPay";
     }
 }
 
@@ -151,7 +165,7 @@ function mudarEmpresa() {
 function calcular() {
     const valor = parseFloat(document.getElementById("valor").value);
     const parcelas = parseInt(document.getElementById("parcelas").value);
-    const empresa = document.getElementById("empresa").value;
+    const modalidade = document.getElementById("modalidade").value;
 
     if (!valor || valor <= 0) {
         alert("Informe um valor válido.");
@@ -160,11 +174,15 @@ function calcular() {
 
     let taxa = 0;
 
-    if (empresa === "nubank") {
+    if (modalidade === "nubank") {
         taxa = taxasNubank[parcelas];
-    } else {
+    }
+    else if (modalidade === "inf_link") {
+        taxa = taxasInfLink[parcelas];
+    }
+    else {
         const bandeira = document.querySelector('input[name="bandeira"]:checked').value;
-        taxa = taxasInfiniti[bandeira][parcelas];
+        taxa = taxasInfMaquina[bandeira][parcelas];
     }
 
     const total = valor / (1 - taxa);
@@ -178,7 +196,7 @@ function calcular() {
 }
 
 // Inicialização
-mudarEmpresa();
+mudarModalidade();
 </script>
 
 </body>
